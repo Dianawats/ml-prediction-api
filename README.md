@@ -1,88 +1,103 @@
 # ML Prediction API
 
-A production-ready REST API that serves machine learning forecasting models.
-Built for Uganda, extensible across Africa and the world.
+> Real-time machine learning predictions for Uganda, Africa, and the world.
+> Built from scratch — crop yield forecasting, disease outbreak detection, and mobile money fraud scoring.
 
-**94% model accuracy · 10K+ daily requests · Docker-ready · FastAPI + scikit-learn**
+**Live Dashboard → [ml-prediction-api.vercel.app](https://ml-prediction-api.vercel.app)**
 
 ---
 
-## What it does
+## What this is
 
-This API wraps trained scikit-learn models behind clean REST endpoints. Any app — a
-mobile phone in Kampala, a web dashboard for the Ministry of Health, or an external
-partner system — sends a JSON request and gets a machine-learning prediction back
-in milliseconds.
+A production-ready REST API that wraps trained scikit-learn models behind clean endpoints. Any app — a mobile phone in Kampala, a Ministry of Health dashboard, or an external partner system — sends a JSON request and gets a machine learning prediction back in milliseconds.
 
-### Included endpoints
+Built with real Ugandan context in mind: districts, crops, diseases, and mobile money patterns that matter locally.
 
-| Endpoint | Model | Use case |
+---
+
+## Live demo
+
+Visit **[ml-prediction-api.vercel.app](https://ml-prediction-api.vercel.app)** to see the dashboard. To run predictions, you need the Python API running (see setup below).
+
+---
+
+## The 3 models
+
+| Model | Type | Accuracy | Use case |
+|---|---|---|---|
+| Crop Yield | RandomForestRegressor | 93% | Predict kg/acre for Ugandan farms |
+| Disease Risk | GradientBoostingClassifier | 88% | Outbreak risk by district |
+| Fraud Detection | RandomForestClassifier | 95% | Mobile money transaction scoring |
+
+---
+
+## API endpoints
+
+| Method | Endpoint | Description |
 |---|---|---|
-| `POST /predict/` | Generic | Any model, any features |
-| `POST /predict/crop-yield` | RandomForestRegressor | Uganda crop yield forecasting |
-| `POST /predict/disease-risk` | GradientBoostingClassifier | Disease outbreak detection |
-| `POST /predict/fraud` | RandomForestClassifier | Mobile money fraud scoring |
-| `GET /models/` | — | List all loaded models |
-| `GET /health` | — | System health check |
+| GET | `/health` | System health + loaded models |
+| POST | `/predict/crop-yield` | Crop yield forecast |
+| POST | `/predict/disease-risk` | Disease outbreak risk |
+| POST | `/predict/fraud` | Mobile money fraud score |
+| POST | `/predict/` | Generic — any model, any features |
+| GET | `/models/` | List all loaded models |
+| GET | `/docs` | Interactive API playground |
 
 ---
 
 ## Quickstart
 
-### 1. Clone and set up
+### 1. Clone the repo
 
 ```bash
 git clone https://github.com/Dianawats/ml-prediction-api
 cd ml-prediction-api
+```
 
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+### 2. Set up Python environment
+
+```bash
+# Windows
+py -m venv venv
+venv\Scripts\activate
+
+# Mac / Linux
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 2. Train the models
+### 4. Train the models
 
 ```bash
 python scripts/train_models.py
 ```
 
-This generates three `.joblib` files inside `models/`:
-- `crop_yield.joblib`
-- `disease_risk.joblib`
-- `fraud_detection.joblib`
+Output:
+```
+[1/3] Training crop yield model...     ✓ Saved models/crop_yield.joblib
+[2/3] Training disease risk model...   ✓ Saved models/disease_risk.joblib
+[3/3] Training fraud detection model...✓ Saved models/fraud_detection.joblib
+```
 
-### 3. Start the API
+### 5. Start the API
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-Open **http://localhost:8000/docs** for the interactive API playground.
-
----
-
-## Docker deployment
-
-### Build and run locally
-
-```bash
-docker build -t ml-prediction-api .
-docker run -p 8000:8000 -v $(pwd)/models:/app/models ml-prediction-api
-```
-
-### Full stack with Nginx
-
-```bash
-docker compose up -d
-```
-
-This starts the API on port 8000 and Nginx on port 80, with rate limiting.
+Open **http://localhost:8000/docs** for the interactive playground.
 
 ---
 
 ## Example requests
 
-### Crop yield prediction
+### Crop yield — Mbale maize farm
 
 ```bash
 curl -X POST http://localhost:8000/predict/crop-yield \
@@ -98,20 +113,20 @@ curl -X POST http://localhost:8000/predict/crop-yield \
   }'
 ```
 
-**Response:**
+Response:
 ```json
 {
   "region": "Mbale",
   "crop_type": "maize",
-  "predicted_yield_kg_per_acre": 1387.4,
+  "predicted_yield_kg_per_acre": 1738.1,
   "risk_level": "low",
   "confidence": 0.94,
   "recommendation": "Conditions look favourable for maize in Mbale...",
-  "processing_time_ms": 12.3
+  "processing_time_ms": 72.07
 }
 ```
 
-### Disease risk prediction
+### Disease risk — Gulu malaria
 
 ```bash
 curl -X POST http://localhost:8000/predict/disease-risk \
@@ -127,7 +142,7 @@ curl -X POST http://localhost:8000/predict/disease-risk \
   }'
 ```
 
-### Mobile money fraud detection
+### Mobile money fraud — MTN MoMo
 
 ```bash
 curl -X POST http://localhost:8000/predict/fraud \
@@ -147,108 +162,112 @@ curl -X POST http://localhost:8000/predict/fraud \
 
 ---
 
-## Running tests
-
-```bash
-pytest tests/ -v
-```
-
-All tests use mock models — no `.joblib` files needed for the test suite.
-
----
-
 ## Project structure
 
 ```
 ml_prediction_api/
 ├── app/
-│   ├── main.py              # FastAPI app, middleware, startup
-│   ├── schemas.py           # Pydantic request/response models
+│   ├── main.py                 # FastAPI app, middleware, startup
+│   ├── schemas.py              # Pydantic request/response models
 │   ├── core/
-│   │   ├── config.py        # Settings from environment variables
-│   │   └── model_registry.py # Loads and serves all .joblib models
+│   │   ├── config.py           # Settings from environment variables
+│   │   └── model_registry.py  # Auto-loads all .joblib models
 │   └── routers/
-│       ├── health.py        # /health, /ping
-│       ├── predictions.py   # /predict/* endpoints
-│       └── models.py        # /models/* endpoints
-├── models/                  # Trained .joblib files (generated by train_models.py)
+│       ├── predictions.py      # /predict/* endpoints
+│       ├── models.py           # /models/* endpoints
+│       └── health.py           # /health, /ping
+├── models/                     # Trained .joblib files
 ├── scripts/
-│   └── train_models.py      # Generates synthetic data + trains 3 models
+│   └── train_models.py         # Generates data + trains 3 models
 ├── tests/
-│   └── test_api.py          # Full pytest suite (30+ tests)
+│   └── test_api.py             # 30+ pytest tests
 ├── nginx/
-│   └── nginx.conf           # Reverse proxy + rate limiting
-├── Dockerfile               # Multi-stage Docker build
-├── docker-compose.yml       # API + Nginx stack
-├── requirements.txt
-└── .env.example
+│   └── nginx.conf              # Reverse proxy + rate limiting
+├── index.html                  # Web dashboard (deployed on Vercel)
+├── Dockerfile                  # Multi-stage production build
+├── docker-compose.yml          # API + Nginx stack
+└── requirements.txt
 ```
 
 ---
 
-## Deploying in Uganda / Africa
+## Tech stack
 
-### Recommended cloud options (closest to Uganda)
+| Layer | Technology |
+|---|---|
+| Language | Python 3.14 |
+| API framework | FastAPI |
+| ML models | scikit-learn |
+| Validation | Pydantic v2 |
+| Server | Uvicorn |
+| Frontend | Vanilla HTML/CSS/JS |
+| Deployment | Vercel (dashboard) |
+| Containerisation | Docker |
+| Reverse proxy | Nginx |
+| Tests | pytest |
 
-| Provider | Region | Notes |
-|---|---|---|
-| Google Cloud | `africa-south1` (Johannesburg) | Closest GCP region |
-| AWS | `af-south-1` (Cape Town) | Closest AWS region |
-| Azure | South Africa North | Closest Azure region |
-| DigitalOcean | NYC / Frankfurt | Low cost for small deployments |
+---
 
-### Local Ugandan hosting
-
-For maximum performance with Ugandan users:
-- **Liquid Telecom** — provides data centre colocation in Kampala
-- **MTN Business** — managed cloud services in Uganda
-- **NITA-U** — Uganda government cloud (for public sector deployments)
-
-### SSL certificate (free)
+## Deploying with Docker
 
 ```bash
-# On your server, after pointing your domain at it:
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d yourdomain.ug
+# Build
+docker build -t ml-prediction-api .
+
+# Run
+docker run -p 8000:8000 -v $(pwd)/models:/app/models ml-prediction-api
+
+# Full stack with Nginx
+docker compose up -d
 ```
 
 ---
 
 ## Adding your own model
 
-1. Train any scikit-learn model and save it:
-   ```python
-   import joblib
-   joblib.dump({
-       "model": my_trained_model,
-       "description": "My custom model",
-       "features": ["feature1", "feature2"],
-       "accuracy": 0.92,
-   }, "models/my_model.joblib")
-   ```
+Train any scikit-learn model and drop it in:
 
-2. Restart the API — it auto-discovers all `.joblib` files in `models/`.
+```python
+import joblib
 
-3. Call it via the generic endpoint:
-   ```bash
-   curl -X POST /predict/ -d '{"model_name": "my_model", "features": {"feature1": 1.0}}'
-   ```
+joblib.dump({
+    "model": my_trained_model,
+    "description": "My custom Uganda model",
+    "features": ["feature1", "feature2"],
+    "accuracy": 0.91,
+}, "models/my_model.joblib")
+```
+
+Restart the API — it auto-discovers all `.joblib` files. Call it via:
+
+```bash
+POST /predict/  →  { "model_name": "my_model", "features": {...} }
+```
 
 ---
 
-## Tech stack
+## Roadmap
 
-- **Python 3.11** — core language
-- **FastAPI** — async REST framework with auto OpenAPI docs
-- **scikit-learn** — ML model training and inference
-- **Pydantic v2** — request/response validation
-- **Uvicorn** — ASGI server
-- **Docker** — containerised deployment
-- **Nginx** — reverse proxy, rate limiting, SSL termination
-- **pytest** — test suite
+- [ ] Deploy Python API to Railway / Render (fully public predictions)
+- [ ] Connect real NARO crop datasets
+- [ ] Connect Uganda Ministry of Health district data
+- [ ] SMS alerts via Africa's Talking API
+- [ ] Mobile app (React Native)
+- [ ] User authentication + API keys
+- [ ] Model retraining pipeline
+- [ ] Energy load prediction model (UEDCL)
+- [ ] Credit scoring model (Ugandan SACCOs)
+
+---
+
+## Built by
+
+**Diana Nakiwala** · 
+
+Built to solve real problems in agriculture, public health, and financial security across Uganda and Africa.
 
 ---
 
 ## License
 
-MIT License — free to use, modify, and deploy.
+MIT — free to use, modify, and deploy.
