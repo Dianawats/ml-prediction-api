@@ -1,0 +1,461 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML Prediction API — Uganda</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  [data-theme="dark"] {
+    --bg: #0f0e0c;
+    --surface: #1a1814;
+    --surface2: #231f18;
+    --border: #3a3020;
+    --accent: #f97316;
+    --accent2: #fb923c;
+    --accent-dim: rgba(249,115,22,0.15);
+    --accent-border: rgba(249,115,22,0.3);
+    --accent-glow: rgba(249,115,22,0.35);
+    --green: #10b981;
+    --red: #ef4444;
+    --yellow: #eab308;
+    --text: #f5f0e8;
+    --muted: #7a6f5e;
+    --shadow: rgba(0,0,0,0.5);
+  }
+  [data-theme="light"] {
+    --bg: #fffaf5;
+    --surface: #ffffff;
+    --surface2: #fff3e8;
+    --border: #f0d9c0;
+    --accent: #ea6c00;
+    --accent2: #c25a00;
+    --accent-dim: rgba(234,108,0,0.1);
+    --accent-border: rgba(234,108,0,0.25);
+    --accent-glow: rgba(234,108,0,0.25);
+    --green: #059669;
+    --red: #dc2626;
+    --yellow: #ca8a04;
+    --text: #1c1208;
+    --muted: #7c6a50;
+    --shadow: rgba(180,100,0,0.08);
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; transition: background .3s, color .3s; }
+
+  /* NAV */
+  nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 16px var(--shadow); }
+  .nav-brand { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -.01em; }
+  .live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.85)} }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .nav-badge { font-size: 11px; background: var(--accent-dim); color: var(--accent2); border: 1px solid var(--accent-border); padding: 3px 10px; border-radius: 20px; font-weight: 600; letter-spacing: .03em; }
+  .theme-toggle { display: flex; align-items: center; gap: 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; cursor: pointer; font-size: 12px; color: var(--muted); transition: all .2s; user-select: none; font-weight: 500; }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  .api-url-bar { display: flex; align-items: center; gap: 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 5px 12px; font-size: 12px; color: var(--muted); }
+  .api-url-bar input { background: none; border: none; outline: none; color: var(--text); font-size: 12px; width: 200px; font-family: monospace; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .status-dot.offline { background: var(--red); }
+  .test-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 11px; padding: 0; font-family: inherit; }
+  .test-btn:hover { color: var(--accent); }
+
+  /* HERO */
+  .hero { text-align: center; padding: 3.5rem 2rem 2.5rem; max-width: 700px; margin: 0 auto; }
+  .hero-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; font-weight: 700; background: var(--accent-dim); border: 1px solid var(--accent-border); padding: 4px 14px; border-radius: 20px; }
+  .hero h1 { font-size: clamp(28px,5vw,42px); font-weight: 800; line-height: 1.15; margin-bottom: .75rem; color: var(--text); letter-spacing: -.02em; }
+  [data-theme="dark"] .hero h1 { background: linear-gradient(135deg, #fed7aa, #f97316, #ea580c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  [data-theme="light"] .hero h1 { background: linear-gradient(135deg, #c2410c, #ea580c, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero p { font-size: 15px; color: var(--muted); line-height: 1.7; margin-bottom: 2rem; max-width: 560px; margin-left: auto; margin-right: auto; }
+  .stats-row { display: flex; justify-content: center; gap: 0; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: 0 2px 12px var(--shadow); }
+  .stat { text-align: center; padding: 1rem 2rem; flex: 1; min-width: 100px; border-right: 1px solid var(--border); }
+  .stat:last-child { border-right: none; }
+  .stat-val { font-size: 22px; font-weight: 800; color: var(--accent); }
+  .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 3px; font-weight: 500; }
+
+  /* TABS */
+  .tabs-container { max-width: 900px; margin: 2rem auto 0; padding: 0 1.5rem 4rem; }
+  .tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 4px; margin-bottom: 1.5rem; box-shadow: 0 2px 10px var(--shadow); }
+  .tab { flex: 1; padding: .65rem 1rem; border-radius: 10px; border: none; background: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 6px; font-family: inherit; }
+  .tab:hover { color: var(--text); background: var(--surface2); }
+  .tab.active { background: var(--accent); color: #fff; box-shadow: 0 3px 12px var(--accent-glow); }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* CARDS */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; margin-bottom: 1rem; box-shadow: 0 2px 16px var(--shadow); transition: background .3s; }
+  .card-title { font-size: 17px; font-weight: 700; margin-bottom: 5px; color: var(--text); }
+  .card-sub { font-size: 13px; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
+
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 14px; margin-bottom: 1.5rem; }
+  .field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+  .field input, .field select { width: 100%; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 13px; color: var(--text); font-size: 13px; outline: none; transition: border-color .2s, box-shadow .2s; font-family: inherit; }
+  .field input:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+  .field select option { background: var(--surface); color: var(--text); }
+
+  .btn-primary { display: flex; align-items: center; justify-content: center; gap: 8px; padding: .9rem; border-radius: 12px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; background: var(--accent); color: #fff; width: 100%; transition: all .2s; font-family: inherit; box-shadow: 0 4px 16px var(--accent-glow); letter-spacing: .01em; }
+  .btn-primary:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-glow); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; filter: none; }
+
+  /* RESULTS */
+  .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; display: none; box-shadow: 0 4px 20px var(--shadow); }
+  .result-card.visible { display: block; animation: slideIn .35s ease; }
+  @keyframes slideIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  .result-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface2); }
+  .result-header .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-weight: 700; }
+  .result-body { padding: 1.5rem; }
+  .result-big { font-size: 36px; font-weight: 800; color: var(--accent); margin-bottom: .2rem; letter-spacing: -.02em; }
+  .result-sub { font-size: 13px; color: var(--muted); margin-bottom: 1.25rem; }
+  .result-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); gap: 10px; margin-bottom: 1.25rem; }
+  .result-metric { background: var(--surface2); border-radius: 12px; padding: .85rem 1rem; border: 1px solid var(--border); }
+  .result-metric .m-val { font-size: 17px; font-weight: 700; color: var(--text); }
+  .result-metric .m-lbl { font-size: 11px; color: var(--muted); margin-top: 3px; font-weight: 500; }
+
+  .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 11px; border-radius: 20px; text-transform: uppercase; letter-spacing: .07em; }
+  .badge-low { background: rgba(16,185,129,.12); color: var(--green); border: 1px solid rgba(16,185,129,.25); }
+  .badge-medium { background: rgba(234,179,8,.12); color: var(--yellow); border: 1px solid rgba(234,179,8,.25); }
+  .badge-high { background: rgba(239,68,68,.12); color: var(--red); border: 1px solid rgba(239,68,68,.25); }
+  .badge-critical { background: rgba(239,68,68,.2); color: var(--red); border: 1px solid rgba(239,68,68,.4); }
+  .badge-safe { background: rgba(16,185,129,.12); color: var(--green); border: 1px solid rgba(16,185,129,.25); }
+
+  .recommendation { background: var(--surface2); border-left: 3px solid var(--accent); border-radius: 0 12px 12px 0; padding: 1rem 1.25rem; font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .recommendation strong { color: var(--accent); display: block; margin-bottom: 5px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+
+  .fraud-verdict { display: flex; align-items: center; gap: 16px; padding: 1.25rem; border-radius: 12px; margin-bottom: 1rem; }
+  .fraud-verdict.safe { background: rgba(16,185,129,.07); border: 1px solid rgba(16,185,129,.2); }
+  .fraud-verdict.risk { background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.2); }
+  .verdict-icon { font-size: 34px; }
+  .verdict-text .vt { font-size: 19px; font-weight: 800; color: var(--text); }
+  .verdict-text .vs { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+  .prob-bar-wrap { margin-bottom: 1rem; }
+  .prob-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+  .prob-bar { height: 9px; background: var(--surface2); border-radius: 5px; overflow: hidden; border: 1px solid var(--border); }
+  .prob-bar-fill { height: 100%; border-radius: 5px; transition: width .7s ease; }
+  .prob-bar-fill.green { background: var(--green); }
+  .prob-bar-fill.orange { background: var(--accent); }
+  .prob-bar-fill.red { background: var(--red); }
+  .prob-bar-fill.yellow { background: var(--yellow); }
+
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  .error-banner { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25); border-radius: 10px; padding: .9rem 1.1rem; font-size: 13px; color: var(--red); margin-bottom: 1rem; display: none; }
+  .error-banner.visible { display: block; }
+
+  .json-toggle { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); cursor: pointer; border: none; background: none; padding: 0; font-family: inherit; margin-top: .75rem; font-weight: 500; transition: color .15s; }
+  .json-toggle:hover { color: var(--accent); }
+  .json-box { display: none; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; font-family: monospace; font-size: 12px; color: var(--accent2); white-space: pre; overflow-x: auto; margin-top: .5rem; }
+  .json-box.visible { display: block; }
+
+  footer { text-align: center; padding: 2rem; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); }
+  footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  footer a:hover { text-decoration: underline; }
+
+  @media(max-width:640px) {
+    nav { padding: 0 1rem; }
+    .api-url-bar { display: none; }
+    .nav-badge { display: none; }
+    .hero { padding: 2rem 1rem 1.5rem; }
+    .tabs-container { padding: 0 1rem 3rem; }
+    .stat { padding: .75rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <div class="live-dot" id="nav-dot"></div>
+    ML Prediction API
+  </div>
+  <div class="api-url-bar">
+    <div class="status-dot" id="status-dot"></div>
+    <span>API:</span>
+    <input type="text" id="api-base" value="http://localhost:8000" spellcheck="false">
+    <button class="test-btn" onclick="checkHealth()">Test</button>
+  </div>
+  <div class="nav-right">
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <span id="theme-icon">☀️</span>
+      <span id="theme-label">Light mode</span>
+    </div>
+    <span class="nav-badge">Uganda · Africa · Global</span>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">🌍 Machine Learning · REST API · Live</div>
+  <h1>Predict. Protect. Grow.</h1>
+  <p>Real-time ML predictions for Ugandan agriculture, public health, and mobile money fraud — powered by models trained on local data.</p>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-val">94%</div><div class="stat-lbl">Crop accuracy</div></div>
+    <div class="stat"><div class="stat-val">88%</div><div class="stat-lbl">Disease accuracy</div></div>
+    <div class="stat"><div class="stat-val">95%</div><div class="stat-lbl">Fraud accuracy</div></div>
+    <div class="stat"><div class="stat-val">&lt;200ms</div><div class="stat-lbl">Response time</div></div>
+  </div>
+</div>
+
+<div class="tabs-container">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('crop',this)">🌽 Crop Yield</button>
+    <button class="tab" onclick="switchTab('disease',this)">🏥 Disease Risk</button>
+    <button class="tab" onclick="switchTab('fraud',this)">🔒 Fraud Detection</button>
+  </div>
+
+  <!-- CROP YIELD -->
+  <div id="panel-crop" class="panel active">
+    <div class="card">
+      <div class="card-title">Crop Yield Forecasting</div>
+      <div class="card-sub">Enter farm details to get a predicted yield in kg/acre and a farming recommendation for your district.</div>
+      <div class="form-grid">
+        <div class="field"><label>Region</label>
+          <select id="c-region"><option>Mbale</option><option>Mbarara</option><option>Gulu</option><option>Lira</option><option>Jinja</option><option>Kampala</option><option>Arua</option><option>Fort Portal</option><option>Soroti</option><option>Masaka</option></select></div>
+        <div class="field"><label>Crop Type</label>
+          <select id="c-crop"><option value="maize">Maize</option><option value="coffee">Coffee</option><option value="beans">Beans</option><option value="cassava">Cassava</option><option value="rice">Rice</option><option value="sorghum">Sorghum</option><option value="groundnuts">Groundnuts</option><option value="tea">Tea</option></select></div>
+        <div class="field"><label>Rainfall (mm)</label><input type="number" id="c-rainfall" value="145" min="0" max="3000"></div>
+        <div class="field"><label>Temperature (°C)</label><input type="number" id="c-temp" value="22.5" min="10" max="45" step="0.5"></div>
+        <div class="field"><label>Soil Type</label>
+          <select id="c-soil"><option value="loam">Loam</option><option value="clay">Clay</option><option value="sandy">Sandy</option><option value="silt">Silt</option></select></div>
+        <div class="field"><label>Planting Month</label>
+          <select id="c-month"><option value="1">January</option><option value="2">February</option><option value="3" selected>March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select></div>
+        <div class="field"><label>Farm Size (acres)</label><input type="number" id="c-size" value="2.5" min="0.1" step="0.5"></div>
+      </div>
+      <div class="error-banner" id="crop-error"></div>
+      <button class="btn-primary" onclick="predictCrop()" id="crop-btn">Run Yield Prediction</button>
+    </div>
+    <div class="result-card" id="crop-result">
+      <div class="result-header"><span class="label">Prediction Result</span><span id="crop-time" style="font-size:12px;color:var(--muted)"></span></div>
+      <div class="result-body">
+        <div class="result-big" id="crop-yield-val">—</div>
+        <div class="result-sub">kg per acre predicted yield</div>
+        <div class="result-grid">
+          <div class="result-metric"><div class="m-val" id="crop-risk-badge">—</div><div class="m-lbl">Risk level</div></div>
+          <div class="result-metric"><div class="m-val" id="crop-conf">—</div><div class="m-lbl">Confidence</div></div>
+          <div class="result-metric"><div class="m-val" id="crop-region-out">—</div><div class="m-lbl">District</div></div>
+        </div>
+        <div class="recommendation"><strong>Recommendation</strong><span id="crop-rec"></span></div>
+        <button class="json-toggle" onclick="toggleJson('crop-json')">▶ View raw JSON</button>
+        <div class="json-box" id="crop-json"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DISEASE RISK -->
+  <div id="panel-disease" class="panel">
+    <div class="card">
+      <div class="card-title">Disease Outbreak Risk</div>
+      <div class="card-sub">Predict outbreak risk in a Ugandan district based on environmental and clinical indicators.</div>
+      <div class="form-grid">
+        <div class="field"><label>District</label>
+          <select id="d-district"><option>Gulu</option><option>Lira</option><option>Arua</option><option>Kampala</option><option>Mbale</option><option>Mbarara</option><option>Jinja</option><option>Masaka</option><option>Soroti</option><option>Moroto</option></select></div>
+        <div class="field"><label>Disease</label>
+          <select id="d-disease"><option value="malaria">Malaria</option><option value="cholera">Cholera</option><option value="typhoid">Typhoid</option><option value="covid">COVID-19</option></select></div>
+        <div class="field"><label>Rainfall last 30 days (mm)</label><input type="number" id="d-rainfall" value="210" min="0" max="1000"></div>
+        <div class="field"><label>Clinic cases last week</label><input type="number" id="d-cases" value="87" min="0"></div>
+        <div class="field"><label>Population density (per km²)</label><input type="number" id="d-density" value="145" min="0"></div>
+        <div class="field"><label>Temperature (°C)</label><input type="number" id="d-temp" value="28.5" min="10" max="45" step="0.5"></div>
+        <div class="field" style="grid-column:1/-1"><label>Clean water access?</label>
+          <select id="d-water"><option value="false">No — limited access</option><option value="true">Yes — treated water available</option></select></div>
+      </div>
+      <div class="error-banner" id="disease-error"></div>
+      <button class="btn-primary" onclick="predictDisease()" id="disease-btn">Assess Outbreak Risk</button>
+    </div>
+    <div class="result-card" id="disease-result">
+      <div class="result-header"><span class="label">Risk Assessment</span><span id="disease-time" style="font-size:12px;color:var(--muted)"></span></div>
+      <div class="result-body">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
+          <div class="result-big" id="disease-score">—</div>
+          <div><div id="disease-badge" style="margin-bottom:5px"></div><div style="font-size:13px;color:var(--muted)" id="disease-alert-txt"></div></div>
+        </div>
+        <div class="prob-bar-wrap">
+          <div class="prob-bar-label"><span>Outbreak probability</span><span id="disease-pct">—</span></div>
+          <div class="prob-bar"><div class="prob-bar-fill orange" id="disease-bar" style="width:0%"></div></div>
+        </div>
+        <div class="result-grid">
+          <div class="result-metric"><div class="m-val" id="disease-conf">—</div><div class="m-lbl">Confidence</div></div>
+          <div class="result-metric"><div class="m-val" id="disease-district-out">—</div><div class="m-lbl">District</div></div>
+          <div class="result-metric"><div class="m-val" id="disease-name-out">—</div><div class="m-lbl">Disease</div></div>
+        </div>
+        <div class="recommendation"><strong>Recommended Action</strong><span id="disease-action"></span></div>
+        <button class="json-toggle" onclick="toggleJson('disease-json')">▶ View raw JSON</button>
+        <div class="json-box" id="disease-json"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FRAUD DETECTION -->
+  <div id="panel-fraud" class="panel">
+    <div class="card">
+      <div class="card-title">Mobile Money Fraud Detection</div>
+      <div class="card-sub">Score a mobile money transaction for fraud risk in real time. Works with MTN MoMo, Airtel Money, and similar platforms.</div>
+      <div class="form-grid">
+        <div class="field"><label>Amount (UGX)</label><input type="number" id="f-amount" value="500000" min="100"></div>
+        <div class="field"><label>Sender account age (days)</label><input type="number" id="f-sender-age" value="365" min="0"></div>
+        <div class="field"><label>Receiver account age (days)</label><input type="number" id="f-receiver-age" value="3" min="0"></div>
+        <div class="field"><label>Transactions in last 24h</label><input type="number" id="f-txn24h" value="12" min="0"></div>
+        <div class="field"><label>Transaction hour (0–23)</label><input type="number" id="f-hour" value="2" min="0" max="23"></div>
+        <div class="field"><label>Sender district</label>
+          <select id="f-sender-district"><option>Kampala</option><option>Wakiso</option><option>Gulu</option><option>Mbarara</option><option>Jinja</option><option>Mbale</option></select></div>
+        <div class="field"><label>Receiver district</label>
+          <select id="f-receiver-district"><option>Wakiso</option><option>Kampala</option><option>Gulu</option><option>Mbarara</option><option>Jinja</option><option>Mbale</option></select></div>
+        <div class="field"><label>New recipient?</label>
+          <select id="f-new-recipient"><option value="true">Yes — first time</option><option value="false">No — sent before</option></select></div>
+        <div class="field"><label>Device changed recently?</label>
+          <select id="f-device"><option value="true">Yes</option><option value="false">No</option></select></div>
+      </div>
+      <div class="error-banner" id="fraud-error"></div>
+      <button class="btn-primary" onclick="predictFraud()" id="fraud-btn">Score Transaction</button>
+    </div>
+    <div class="result-card" id="fraud-result">
+      <div class="result-header"><span class="label">Fraud Score</span><span id="fraud-time" style="font-size:12px;color:var(--muted)"></span></div>
+      <div class="result-body">
+        <div class="fraud-verdict" id="fraud-verdict">
+          <div class="verdict-icon" id="fraud-icon">—</div>
+          <div class="verdict-text"><div class="vt" id="fraud-verdict-text">—</div><div class="vs" id="fraud-verdict-sub">—</div></div>
+        </div>
+        <div class="prob-bar-wrap">
+          <div class="prob-bar-label"><span>Fraud probability</span><span id="fraud-pct">—</span></div>
+          <div class="prob-bar"><div class="prob-bar-fill" id="fraud-bar" style="width:0%"></div></div>
+        </div>
+        <div class="result-grid">
+          <div class="result-metric"><div class="m-val" id="fraud-risk-level">—</div><div class="m-lbl">Risk level</div></div>
+          <div class="result-metric"><div class="m-val" id="fraud-action-out">—</div><div class="m-lbl">Action</div></div>
+          <div class="result-metric"><div class="m-val" id="fraud-amount-out">—</div><div class="m-lbl">Amount (UGX)</div></div>
+        </div>
+        <button class="json-toggle" onclick="toggleJson('fraud-json')">▶ View raw JSON</button>
+        <div class="json-box" id="fraud-json"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Built by <strong>Diana Nakiwala</strong> · ML Prediction API for Uganda &amp; Africa ·
+  <a href="https://github.com/Dianawats/ml-prediction-api" target="_blank">GitHub</a> ·
+  <a href="/docs" target="_blank">API Docs</a>
+</footer>
+
+<script>
+  const html = document.documentElement;
+  setTheme(localStorage.getItem('theme') || 'dark');
+
+  function setTheme(t) {
+    html.setAttribute('data-theme', t);
+    localStorage.setItem('theme', t);
+    document.getElementById('theme-icon').textContent = t === 'dark' ? '☀️' : '🌙';
+    document.getElementById('theme-label').textContent = t === 'dark' ? 'Light mode' : 'Dark mode';
+  }
+  function toggleTheme() { setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
+
+  function getBase() { return document.getElementById('api-base').value.replace(/\/$/, ''); }
+  async function checkHealth() {
+    const dot = document.getElementById('status-dot');
+    try { const r = await fetch(getBase() + '/health'); dot.classList.toggle('offline', !r.ok); }
+    catch { dot.classList.add('offline'); }
+  }
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+  }
+  function toggleJson(id) {
+    const box = document.getElementById(id); box.classList.toggle('visible');
+    box.previousElementSibling.textContent = box.classList.contains('visible') ? '▼ Hide raw JSON' : '▶ View raw JSON';
+  }
+  function riskBadge(l) { return `<span class="badge badge-${l}">${l}</span>`; }
+  function setLoading(id, on, label) {
+    const b = document.getElementById(id); b.disabled = on;
+    b.innerHTML = on ? '<div class="spinner"></div> Running model...' : label;
+  }
+  function showError(id, msg) { const e = document.getElementById(id); e.textContent = '⚠ ' + msg; e.classList.add('visible'); }
+  function hideError(id) { document.getElementById(id).classList.remove('visible'); }
+
+  async function predictCrop() {
+    hideError('crop-error'); setLoading('crop-btn', true, 'Run Yield Prediction');
+    const p = { region: document.getElementById('c-region').value, crop_type: document.getElementById('c-crop').value,
+      rainfall_mm: parseFloat(document.getElementById('c-rainfall').value), temperature_c: parseFloat(document.getElementById('c-temp').value),
+      soil_type: document.getElementById('c-soil').value, planting_month: parseInt(document.getElementById('c-month').value),
+      farm_size_acres: parseFloat(document.getElementById('c-size').value) };
+    try {
+      const r = await fetch(getBase() + '/predict/crop-yield', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) });
+      const d = await r.json(); if (!r.ok) throw new Error(d.detail || 'Prediction failed');
+      document.getElementById('crop-yield-val').textContent = d.predicted_yield_kg_per_acre.toLocaleString() + ' kg/acre';
+      document.getElementById('crop-risk-badge').innerHTML = riskBadge(d.risk_level);
+      document.getElementById('crop-conf').textContent = Math.round(d.confidence * 100) + '%';
+      document.getElementById('crop-region-out').textContent = d.region;
+      document.getElementById('crop-rec').textContent = d.recommendation;
+      document.getElementById('crop-time').textContent = d.processing_time_ms + 'ms';
+      document.getElementById('crop-json').textContent = JSON.stringify(d, null, 2);
+      document.getElementById('crop-result').classList.add('visible');
+    } catch (e) { showError('crop-error', e.message + ' — is your API running on ' + getBase() + '?'); }
+    setLoading('crop-btn', false, 'Run Yield Prediction');
+  }
+
+  async function predictDisease() {
+    hideError('disease-error'); setLoading('disease-btn', true, 'Assess Outbreak Risk');
+    const p = { district: document.getElementById('d-district').value, disease: document.getElementById('d-disease').value,
+      rainfall_mm_last_30d: parseFloat(document.getElementById('d-rainfall').value),
+      clinic_cases_last_week: parseInt(document.getElementById('d-cases').value),
+      population_density: parseFloat(document.getElementById('d-density').value),
+      has_clean_water_access: document.getElementById('d-water').value === 'true',
+      temperature_c: parseFloat(document.getElementById('d-temp').value) };
+    try {
+      const r = await fetch(getBase() + '/predict/disease-risk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) });
+      const d = await r.json(); if (!r.ok) throw new Error(d.detail || 'Prediction failed');
+      const pct = Math.round(d.risk_score * 100);
+      document.getElementById('disease-score').textContent = pct + '%';
+      document.getElementById('disease-badge').innerHTML = riskBadge(d.risk_level);
+      document.getElementById('disease-alert-txt').textContent = d.alert_recommended ? '⚠ Alert recommended' : '✓ No alert needed';
+      document.getElementById('disease-pct').textContent = pct + '%';
+      document.getElementById('disease-bar').style.width = pct + '%';
+      document.getElementById('disease-conf').textContent = Math.round(d.confidence * 100) + '%';
+      document.getElementById('disease-district-out').textContent = d.district;
+      document.getElementById('disease-name-out').textContent = d.disease;
+      document.getElementById('disease-action').textContent = d.action;
+      document.getElementById('disease-time').textContent = d.processing_time_ms + 'ms';
+      document.getElementById('disease-json').textContent = JSON.stringify(d, null, 2);
+      document.getElementById('disease-result').classList.add('visible');
+    } catch (e) { showError('disease-error', e.message + ' — is your API running on ' + getBase() + '?'); }
+    setLoading('disease-btn', false, 'Assess Outbreak Risk');
+  }
+
+  async function predictFraud() {
+    hideError('fraud-error'); setLoading('fraud-btn', true, 'Score Transaction');
+    const p = { transaction_amount_ugx: parseFloat(document.getElementById('f-amount').value),
+      sender_account_age_days: parseInt(document.getElementById('f-sender-age').value),
+      receiver_account_age_days: parseInt(document.getElementById('f-receiver-age').value),
+      transactions_last_24h: parseInt(document.getElementById('f-txn24h').value),
+      transaction_hour: parseInt(document.getElementById('f-hour').value),
+      sender_district: document.getElementById('f-sender-district').value,
+      receiver_district: document.getElementById('f-receiver-district').value,
+      is_new_recipient: document.getElementById('f-new-recipient').value === 'true',
+      device_changed_recently: document.getElementById('f-device').value === 'true' };
+    try {
+      const r = await fetch(getBase() + '/predict/fraud', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) });
+      const d = await r.json(); if (!r.ok) throw new Error(d.detail || 'Prediction failed');
+      const pct = Math.round(d.fraud_probability * 100);
+      document.getElementById('fraud-verdict').className = 'fraud-verdict ' + (d.is_fraud ? 'risk' : 'safe');
+      document.getElementById('fraud-icon').textContent = d.is_fraud ? '🚨' : '✅';
+      document.getElementById('fraud-verdict-text').textContent = d.is_fraud ? 'Likely Fraudulent' : 'Looks Legitimate';
+      document.getElementById('fraud-verdict-sub').textContent = d.is_fraud ? `${pct}% fraud probability — action: ${d.recommended_action.toUpperCase()}` : `${pct}% — transaction can proceed`;
+      document.getElementById('fraud-pct').textContent = pct + '%';
+      const bar = document.getElementById('fraud-bar'); bar.style.width = pct + '%';
+      bar.className = 'prob-bar-fill ' + (pct > 60 ? 'red' : pct > 30 ? 'orange' : 'green');
+      document.getElementById('fraud-risk-level').innerHTML = riskBadge(d.risk_level);
+      document.getElementById('fraud-action-out').textContent = d.recommended_action.toUpperCase();
+      document.getElementById('fraud-amount-out').textContent = parseInt(p.transaction_amount_ugx).toLocaleString();
+      document.getElementById('fraud-time').textContent = d.processing_time_ms + 'ms';
+      document.getElementById('fraud-json').textContent = JSON.stringify(d, null, 2);
+      document.getElementById('fraud-result').classList.add('visible');
+    } catch (e) { showError('fraud-error', e.message + ' — is your API running on ' + getBase() + '?'); }
+    setLoading('fraud-btn', false, 'Score Transaction');
+  }
+
+  checkHealth();
+</script>
+</body>
+</html>
