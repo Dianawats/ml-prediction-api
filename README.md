@@ -32,7 +32,7 @@ in milliseconds.
 ### 1. Clone and set up
 
 ```bash
-git clone https://github.com/yourname/ml-prediction-api
+git clone https://github.com/Dianawats/ml-prediction-api
 cd ml-prediction-api
 
 python -m venv venv
