@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    container_name: ml_prediction_api
+    environment:
+      - APP_NAME=ML Prediction API
+      - MODELS_DIR=/app/models
+      - WORKERS=2
+    volumes:
+      - ./models:/app/models:ro   # mount trained models
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    container_name: ml_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro     # place your SSL certs here
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  model_data:
